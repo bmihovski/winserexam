@@ -59,5 +59,11 @@ Get-ADComputer slave
 #Create new user Mariana Parusheva in Finance OU with account name mariana.parusheva 
 #Create new OU Lab Groups which will contain all security groups created during the exam 
 #Create new global security group GS IT and add user Ivan as a member 
-#Create new global security group GS Finance and add user Mariana as a member 
-#Create new global security group GS Servers and add computer SLAVE as a member 
+#Create new global security group GS Finance and add userd Mariana as a member 
+#Create new global security group GS Servers and add computer SLAVE as a member
+New-ADOrganizationalUnit -Name "Lab Users"
+New-ADOrganizationalUnit -Name "IT" -Path "ou=Lab Users,dc=wsa,dc=lab"
+New-ADOrganizationalUnit -Name "Finance" -Path "ou=Lab Users,dc=wsa,dc=lab"
+#Change the default container for new users to Lab Users. All users created during the exam, should be under this OU
+redircmp "OU=Lab Users,DC=WSA,DC=LAB"
+ 
