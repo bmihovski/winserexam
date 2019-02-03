@@ -50,3 +50,14 @@ Restart-Computer
 Add-Computer -DomainName WSA.LAB -DomainCredential Administrator
 #Master
 Get-ADComputer slave
+#Create OU Lab Users and then create two nested OUs - IT and Finance 
+#Change the default container for new users to Lab Users. All users created during the exam, should be under this OU 
+#Create OU Lab Computers and then create two nested OUs - IT and Finance
+#Change the default container for new computers to Lab Computers.
+#All computers created or joined during the exam should be children of this OU
+#Create new user Ivan Petkov in IT OU with account name ivan.petkov 
+#Create new user Mariana Parusheva in Finance OU with account name mariana.parusheva 
+#Create new OU Lab Groups which will contain all security groups created during the exam 
+#Create new global security group GS IT and add user Ivan as a member 
+#Create new global security group GS Finance and add user Mariana as a member 
+#Create new global security group GS Servers and add computer SLAVE as a member 
