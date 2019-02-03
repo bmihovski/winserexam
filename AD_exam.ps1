@@ -109,3 +109,67 @@ Add-ADGroupMember -Identity 'GS Servers' -Members "SLAVE$"
 #Then create folder C:\Common and share it as Common with both Share and NTFS permissions set to Full for Everyone 
 #Create folder C:\Common\IT and set NTFS permissions to Full for GS IT and deny access for GS Finance 
 #Create folder C:\Common\Finance and set NTFS permissions to Full for GS Finance and deny access for GS IT
+# SLAVE
+Enter-PSSession -ComputerName slave
+Add-WindowsFeature Web-Server -IncludeManagementTools
+Get-Service | Where -Property DisplayName -Like *Web*
+#On SLAVE create second site that will be listening on port 8000.
+
+C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe -noexit -command "import-module webadministration | out-null"
+set-executionpolicy unrestricted
+New-Item iis:\Sites\ExamSite -bindings @{protocol="http";bindingInformation=":8000:ExamSite"} -physicalPath C:\Web-Site
+#On SLAVE, install File Server role if needed, so you can create and manage file shares.
+Install-WindowsFeature FS-FileServer,FS-Resource-Manager -IncludeManagementTools
+#Then create folder C:\Common and share it as Common with both Share and NTFS permissions set to Full for Everyone
+mkdir C:\Common
+New-SmbShare -Name Common -Path C:\Common -FullAccess Everyone
+[system.enum]::getnames([System.Security.AccessControl.FileSystemRights])
+$acl = Get-Acl C:\Common
+$AccessRule = New-Object System.Security.AccessControl.FileSystemAccessRule("Everyone","FullControl","Allow")
+$acl.SetAccessRule($AccessRule)
+$acl | Set-Acl C:\Common
+Get-Acl C:\Common | fl
+#Create folder C:\Common\IT and set NTFS permissions to Full for GS IT and deny access for GS Finance 
+mkdir C:\Common\IT
+$acl = Get-Acl C:\Common\IT
+$AccessRule = New-Object System.Security.AccessControl.FileSystemAccessRule("WSA\GS IT","FullControl","Allow")
+$acl.SetAccessRule($AccessRule)
+$acl | Set-Acl C:\Common\IT
+Get-Acl C:\Common\IT | fl
+
+#Create GPO-Remote that enables remote management (windows service and firewall rule(s))
+#Create GPO-IIS that enables port 8000/tcp and make it applicable only to SLAVE
+#Create GPO-Drive that maps \\SLAVE\Common as local drive Z: 
+#Create GPO-Wallpaper that changes the wallpaper with the one provided in the beginning of the document (first it must be placed on a shared resource)
+# Go to Computer Configuration > Policies > Administrative Templates > Windows Components >
+#Windows Remote Management (WinRM) > WinRM Service > Allow remote server management through WinRM.
+# Go to Computer Configuration > Policies > Preferences > Control Panel Settings.
+#And right-click Services and choose New > Service.
+# Choose Automatic (Delayed Start) as startup type, pick WinRM as the service name, set Start service as the action.
+# Go to Computer Configuration\Policies\Administrative Templates\Network\Network Connections\Windows Firewall\Domain Profile
+#and set Windows Firewall: Protect all network connections to Enabled
+# Go to Computer Configuration\Policies\Windows Settings\Security Settings\Windows Firewall
+#with Advanced Security\Inbound Rules enable predefined rules Windows Remote Management WRM
+# To reduce the exposure to this service we can remove the Private and only leave only Domain profile in place.
+#Double-click the new rule we just created, go to Advanced tab and uncheck the Private option from the Profiles section.
+
+#Create GPO-IIS that enables port 8000/tcp and make it applicable only to SLAVE
+# Add custom inbound rule protocol and ports icmpv4 and profile domain
+
+#Create GPO-Drive that maps \\SLAVE\Common as local drive Z: 
+# Add new policy object MountSales with action create and change targeting from common and connect it to OU and tick reconnect
+
+#Create GPO-Wallpaper that changes the wallpaper with the one provided in the beginning of the document
+#(first it must be placed on a shared resource)
+
+#Create PowerShell script named C:\Scripts\Track-Resources.ps1 that extracts available memory
+#and free disk space counters and appends the results to the C:\Temp\Resources.log file.
+#Data should be formatted like TIMESTAMP / TYPE : VALUE where TYPE is either RAM or HDD, and TIMESTAMP and VALUE are the ones coming from the corresponding counter
+#Create a new schedule Track-Resources for the script and set it to execute every 5 minutes
+$action = New-ScheduledTaskAction -Execute C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe -Argument C:\Scripts\Track-Resources.ps1
+$interval = (New-TimeSpan -Minutes 5)
+$dt= ([DateTime]::Now)
+$duration = $dt.AddYears(25) -$dt;
+$trigger = New-ScheduledTaskTrigger -Once -At (Get-Date).Date -RepetitionInterval $interval -RepetitionDuration $duration 
+$task = New-ScheduledTask -Action $action -Trigger $trigger
+Register-ScheduledTask -TaskName Track-Resources -InputObject $task
