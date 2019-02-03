@@ -102,3 +102,10 @@ New-ADGroup -Name 'GS Servers' -Description 'members computers in IT OU' -GroupC
 -GroupScope DomainLocal -SamAccountName 'GS Servers' `
 -Path "OU=Lab Groups,DC=WSA,DC=LAB"
 Add-ADGroupMember -Identity 'GS Servers' -Members "SLAVE$"
+#On SLAVE install IIS role 
+#On SLAVE create second site that will be listening on port 8000.
+#For the site use the files provided as a link in the beginning of the document 
+#On SLAVE, install File Server role if needed, so you can create and manage file shares.
+#Then create folder C:\Common and share it as Common with both Share and NTFS permissions set to Full for Everyone 
+#Create folder C:\Common\IT and set NTFS permissions to Full for GS IT and deny access for GS Finance 
+#Create folder C:\Common\Finance and set NTFS permissions to Full for GS Finance and deny access for GS IT
