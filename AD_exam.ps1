@@ -65,5 +65,12 @@ New-ADOrganizationalUnit -Name "Lab Users"
 New-ADOrganizationalUnit -Name "IT" -Path "ou=Lab Users,dc=wsa,dc=lab"
 New-ADOrganizationalUnit -Name "Finance" -Path "ou=Lab Users,dc=wsa,dc=lab"
 #Change the default container for new users to Lab Users. All users created during the exam, should be under this OU
-redircmp "OU=Lab Users,DC=WSA,DC=LAB"
+ReDirUsr "OU=Lab Users,DC=WSA,DC=LAB"
+#Create OU Lab Computers and then create two nested OUs - IT and Finance
+New-ADOrganizationalUnit -Name "Lab Computers"
+New-ADOrganizationalUnit -Name "IT" -Path "ou=Lab Computers,dc=wsa,dc=lab"
+New-ADOrganizationalUnit -Name "Finance" -Path "ou=Lab Computers,dc=wsa,dc=lab"
+#Change the default container for new computers to Lab Computers.
+#All computers created or joined during the exam should be children of this OU
+redircmp "OU=Lab Computers,DC=WSA,DC=LAB"
  
