@@ -73,4 +73,32 @@ New-ADOrganizationalUnit -Name "Finance" -Path "ou=Lab Computers,dc=wsa,dc=lab"
 #Change the default container for new computers to Lab Computers.
 #All computers created or joined during the exam should be children of this OU
 redircmp "OU=Lab Computers,DC=WSA,DC=LAB"
- 
+#Create new user Ivan Petkov in IT OU with account name ivan.petkov
+New-ADUser -Name Ivan -SamAccountName ivan.petkov -GivenName Ivan -Surname Petkov `
+-AccountPassword (ConvertTo-SecureString -AsPlainText Password1 -Force) `
+-UserPrincipalName ivan.petkov@wsa.lab `
+-Path "OU=IT,OU=Lab Users,DC=WSA,DC=LAB" `
+-Enabled $true
+#Create new user Mariana Parusheva in Finance OU with account name mariana.parusheva 
+New-ADUser -Name Mariana -SamAccountName mariana.parusheva -GivenName Mariana -Surname Parusheva `
+-AccountPassword (ConvertTo-SecureString -AsPlainText Password1 -Force) `
+-UserPrincipalName mariana.parusheva@wsa.lab `
+-Path "OU=Finance,OU=Lab Users,DC=WSA,DC=LAB" `
+-Enabled $true
+#Create new OU Lab Groups which will contain all security groups created during the exam
+New-ADOrganizationalUnit -Name "Lab Groups"
+#Create new global security group GS IT and add user Ivan as a member
+New-ADGroup -Name 'GS IT' -Description 'members users in IT OU' -GroupCategory Security -GroupScope DomainLocal -SamAccountName 'GS IT' `
+-Path "OU=Lab Groups,DC=WSA,DC=LAB"
+Add-ADGroupMember -Identity 'GS IT' -Members ivan.petkov
+Get-ADGroup -Identity 'GS IT'
+#Create new global security group GS Finance and add userd Mariana as a member
+New-ADGroup -Name 'GS Finance' -Description 'members users in Finance OU' -GroupCategory Security `
+-GroupScope DomainLocal -SamAccountName 'GS Finance' `
+-Path "OU=Lab Groups,DC=WSA,DC=LAB"
+Add-ADGroupMember -Identity 'GS Finance' -Members mariana.parusheva
+#Create new global security group GS Servers and add computer SLAVE as a member
+New-ADGroup -Name 'GS Servers' -Description 'members computers in IT OU' -GroupCategory Security `
+-GroupScope DomainLocal -SamAccountName 'GS Servers' `
+-Path "OU=Lab Groups,DC=WSA,DC=LAB"
+Add-ADGroupMember -Identity 'GS Servers' -Members "SLAVE$"
